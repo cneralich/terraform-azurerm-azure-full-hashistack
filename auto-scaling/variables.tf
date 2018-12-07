@@ -26,6 +26,9 @@ variable "admin_password" {
 variable "azure_region" {
   default = "eastus"
 }
+variable "azure_instance_type" {
+  default = "Standard_DS1_v2"
+}
 
 variable "azure_os" {
   # NB: Do not change for now, as only Ubuntu and one version of RHEL 
