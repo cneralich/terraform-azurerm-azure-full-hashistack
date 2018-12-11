@@ -1,0 +1,1 @@
+azure_vnet_cidr_block = "0.0.0.0/0"
