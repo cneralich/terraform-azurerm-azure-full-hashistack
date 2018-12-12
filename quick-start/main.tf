@@ -5,6 +5,7 @@ resource "azurerm_resource_group" "hashistack" {
   name     = "${var.name}"
   location = "${var.azure_region}"
 }
+
 module "ssh_key" {
   source = "github.com/hashicorp-modules/ssh-keypair-data.git"
 }
@@ -13,14 +14,14 @@ module "ssh_key" {
 #  Azure Network Resources
 # ---------------------------------------------------------------------------------------------------------------------
 module "network_azure" {
-  source = "git@github.com:hashicorp-modules/network-azure.git"
-  resource_group_name   = "${azurerm_resource_group.hashistack.name}"
-  environment_name      = "${var.environment}"
-  location              = "${var.azure_region}"
-  os                    = "${var.azure_os}"
-  public_key_data       = "${module.ssh_key.public_key_openssh}"
-  jumphost_vm_size      = "${var.azure_vm_size}"
-  network_cidrs_public  = ["${var.azure_vnet_cidr_block_public}"]
+  source               = "git@github.com:hashicorp-modules/network-azure.git"
+  resource_group_name  = "${azurerm_resource_group.hashistack.name}"
+  environment_name     = "${var.name}"
+  location             = "${var.azure_region}"
+  os                   = "${var.azure_os}"
+  public_key_data      = "${module.ssh_key.public_key_openssh}"
+  jumphost_vm_size     = "${var.azure_vm_size}"
+  network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
 
   # Configure runtime installation with the templated scripts
   custom_data = <<EOF
@@ -41,16 +42,17 @@ module "hashistack_lb" {
   source              = "Azure/loadbalancer/azurerm"
   resource_group_name = "${azurerm_resource_group.hashistack.name}"
   location            = "${azurerm_resource_group.hashistack.location}"
-  prefix              = "consul"
+  prefix              = "hashistack"
+  frontend_name       = "hashistack"
 
   "remote_port" {
     ssh = ["Tcp", "22"]
   }
 
   "lb_port" {
-    http = ["80", "Tcp", "80"]
-    https = ["443", "Tcp", "443"]
-    tcp_8200 = ["4646", "Tcp", "4646"]
+    http     = ["80", "Tcp", "80"]
+    https    = ["443", "Tcp", "443"]
+    tcp_4646 = ["4646", "Tcp", "4646"]
     tcp_8080 = ["8080", "Tcp", "8080"]
     tcp_8200 = ["8200", "Tcp", "8200"]
     tcp_8500 = ["8500", "Tcp", "8500"]
@@ -66,7 +68,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
   location            = "${azurerm_resource_group.hashistack.location}"
   resource_group_name = "${azurerm_resource_group.hashistack.name}"
 
-  upgrade_policy_mode  = "Manual"
+  upgrade_policy_mode = "Manual"
 
   sku {
     name     = "${var.azure_vm_size}"
@@ -126,11 +128,12 @@ EOF
     primary = true
 
     ip_configuration {
-      name                                   = "${var.name}"
-      primary                                = true
-      subnet_id                              = "${module.network_azure.subnet_public_ids[0]}"
+      name      = "${var.name}"
+      primary   = true
+      subnet_id = "${module.network_azure.subnet_public_ids[0]}"
+
       load_balancer_backend_address_pool_ids = [
-        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}"
+        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}",
       ]
     }
   }

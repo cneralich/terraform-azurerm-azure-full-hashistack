@@ -40,6 +40,7 @@ data "template_file" "nomad_install" {
     nomad_config   = ""
   }
 }
+
 data "template_file" "bastion_quick_start" {
   template = "${file("${path.module}/templates/quick-start-bastion-systemd.sh.tpl")}"
 
