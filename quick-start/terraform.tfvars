@@ -1,3 +1,1 @@
-name = "neil-hashistack-azure"
-
-provider = "azure"
+name = "hashistack-azure-quickstart"

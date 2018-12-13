@@ -31,6 +31,17 @@
     $ az ad sp create-for-rbac --role="Reader" --scopes="/subscriptions/[YOUR_SUBSCRIPTION_ID]"
     ```
 
+## Modules
+
+### Required
+
+These are required modules used to populate required input variables for the auto scaling group. The sub-bullets show the mapping of output variable --> required input variable for the respective modules.
+
+- [Keypair Terraform Module](https://github.com/hashicorp-modules/ssh-keypair-data)
+  - `public_key_openssh` --> `public_key_openssh`
+- [Network Azure Terraform Module](https://github.com/hashicorp-modules/network-azure/)
+  - `subnet_public_ids` --> `subnet_ids`
+
 ## Variables
 
 ### Required
