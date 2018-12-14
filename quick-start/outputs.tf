@@ -1,23 +1,3 @@
-output "quick_jumphost_ssh_string" {
-  description = "Copy paste this string to SSH into the jumphost."
-  value       = "ssh -i private-key.pem ${module.network_azure.jumphost_username}@${module.network_azure.jumphost_ips_public[0]}"
-}
-
-output "consul_ui" {
-  description = "Use this link to access the Consul UI."
-  value       = "http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8500"
-}
-
-output "vault_ui" {
-  description = "Use this link to access the Vault UI."
-  value       = "http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8200"
-}
-
-output "nomad_ui" {
-  description = "Use this link to access the Nomad UI."
-  value       = "http://${module.hashistack_lb.azurerm_public_ip_address[0]}:4646"
-}
-
 output "zREADME" {
   value = <<README
 # ------------------------------------------------------------------------------
@@ -64,7 +44,7 @@ set this up.
 1.) SSH into one of the Vault servers registered with Consul, you can use the
 below command to accomplish this automatically (we'll use Consul DNS moving
 forward once Vault is unsealed).
-  $ ssh -A ${module.network_azure.jumphost_username}@$(curl http://127.0.0.1:8500/v1/agent/members | jq -M -r \
+  $ ssh -A ${var.admin_username}@$(curl http://127.0.0.1:8500/v1/agent/members | jq -M -r \
       '[.[] | select(.Name | contains ("${var.name}-hashistack")) | .Addr][0]')
 
 2.) Initialize Vault

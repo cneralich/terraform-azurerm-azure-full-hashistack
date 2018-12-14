@@ -1,47 +1,10 @@
 # ---------------------------------------------------------------------------------------------------------------------
-#  Azure General Resources
-# ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_resource_group" "hashistack" {
-  name     = "${var.name}"
-  location = "${var.azure_region}"
-}
-
-module "ssh_key" {
-  source = "github.com/hashicorp-modules/ssh-keypair-data.git"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-#  Azure Network Resources
-# ---------------------------------------------------------------------------------------------------------------------
-module "network_azure" {
-  source               = "git@github.com:hashicorp-modules/network-azure.git"
-  resource_group_name  = "${azurerm_resource_group.hashistack.name}"
-  environment_name     = "${var.name}"
-  location             = "${var.azure_region}"
-  os                   = "${var.azure_os}"
-  public_key_data      = "${module.ssh_key.public_key_openssh}"
-  jumphost_vm_size     = "${var.azure_vm_size}"
-  network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
-
-  # Configure runtime installation with the templated scripts
-  custom_data = <<EOF
-${data.template_file.base_install.rendered}
-${data.template_file.consul_install.rendered}
-${data.template_file.vault_install.rendered}
-${data.template_file.nomad_install.rendered}
-${data.template_file.hashistack_quick_start.rendered}
-${data.template_file.java_install.rendered}
-${data.template_file.docker_install.rendered}
-EOF
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
 # ---------------------------------------------------------------------------------------------------------------------
 module "hashistack_lb" {
   source              = "Azure/loadbalancer/azurerm"
-  resource_group_name = "${azurerm_resource_group.hashistack.name}"
-  location            = "${azurerm_resource_group.hashistack.location}"
+  resource_group_name = "${var.azure_resource_group_name}"
+  location            = "${var.azure_region}"
   prefix              = "hashistack"
   frontend_name       = "hashistack"
 
@@ -61,12 +24,101 @@ module "hashistack_lb" {
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
+#  Azure Network Resources
+# ---------------------------------------------------------------------------------------------------------------------
+resource "azurerm_network_security_group" "hashistack" {
+  name                = "${var.name}"
+  location            = "${var.azure_region}"
+  resource_group_name = "${var.azure_resource_group_name}"
+
+  security_rule {
+    name                       = "http"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "https"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "tcp_4646"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "4646"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "tcp_8080"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "tcp_8200"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8200"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "tcp_8500"
+    priority                   = 101
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8500"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 #  Azure Auto Scaler Resources
 # ---------------------------------------------------------------------------------------------------------------------
+data "template_file" "hashistack_init" {
+  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
+
+  vars = {
+    name      = "${var.name}"
+    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
+  }
+}
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
-  name                = "${var.name}_scale-set-1"
-  location            = "${azurerm_resource_group.hashistack.location}"
-  resource_group_name = "${azurerm_resource_group.hashistack.name}"
+  name                = "${var.name}"
+  location            = "${var.azure_region}"
+  resource_group_name = "${var.azure_resource_group_name}"
 
   upgrade_policy_mode = "Manual"
 
@@ -75,7 +127,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     tier     = "Standard"
     capacity = 2
   }
-
+  // TODO
   storage_profile_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
@@ -103,15 +155,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     admin_password       = "${var.admin_password}"
 
     # Configure runtime installation with the templated scripts
-    custom_data = <<EOF
-${data.template_file.base_install.rendered}
-${data.template_file.consul_install.rendered}
-${data.template_file.vault_install.rendered}
-${data.template_file.nomad_install.rendered}
-${data.template_file.hashistack_quick_start.rendered}
-${data.template_file.java_install.rendered}
-${data.template_file.docker_install.rendered}
-EOF
+    custom_data = "${data.template_file.hashistack_init.rendered}"
   }
 
   os_profile_linux_config {
@@ -119,21 +163,26 @@ EOF
 
     ssh_keys {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${module.ssh_key.public_key_openssh}"
+      key_data = "${var.admin_public_key_openssh}"
     }
   }
 
   network_profile {
-    name    = "${var.name}"
-    primary = true
+    name                                   = "${var.name}"
+    primary                                = true
+    network_security_group_id              = "${azurerm_network_security_group.hashistack.id}"
 
     ip_configuration {
-      name      = "${var.name}"
-      primary   = true
-      subnet_id = "${module.network_azure.subnet_public_ids[0]}"
+      name = "${var.name}"
+      primary = "True"
+      subnet_id                              = "${var.azure_subnet_id}"
 
       load_balancer_backend_address_pool_ids = [
-        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}",
+        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}"
+      ]
+
+      load_balancer_inbound_nat_rules_ids    = [
+
       ]
     }
   }
