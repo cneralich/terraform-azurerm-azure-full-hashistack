@@ -2,7 +2,7 @@
 # General Variables
 # ---------------------------------------------------------------------------------------------------------------------
 variable "name" {
-  description = "The name to use on all of the resources."
+  description = "The name to use on all of the resources (in this case, the Azure Resource Group name as well)."
   type        = "string"
 }
 
@@ -35,13 +35,19 @@ variable "admin_password" {
   default     = "pTFE1234!"
 }
 
+variable "admin_public_key_openssh" {
+  description = "The SSH public key data to use for each VM."
+  type        = "string"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Azure Variables
 # ---------------------------------------------------------------------------------------------------------------------
+
 variable "azure_region" {
   description = "The Azure Region to use for all resources (ex: westus, eastus)."
   type        = "string"
-  default     = "westus"
+  default     = "eastus"
 }
 
 variable "azure_os" {
@@ -61,10 +67,39 @@ variable "azure_vm_size" {
   default     = "Standard_DS1_V2"
 }
 
+variable "azure_asg_initial_vm_count" {
+  description = "The number of VMs to spin up in the autoscaling group initially."
+  type        = "string"
+  default     = "1"
+}
+
+variable "azure_vm_custom_data" {
+  description = "Custom data script to pass and execute on each VM at bootup."
+  type        = "string"
+  default     = ""
+}
+
 variable "azure_vnet_cidr_block" {
   description = "The public network CIDRs to add to the virtual network."
   type        = "string"
   default     = "172.31.0.0/20"
+}
+
+variable "azure_subnet_id" {
+  description = "Subnet ID to provision resources in."
+  type        = "string"
+}
+
+variable "azure_load_balancer_backend_address_pool_ids" {
+  description = "TODO"
+  type        = "list"
+  default     = []
+}
+
+variable "azure_load_balancer_inbound_nat_rules_ids" {
+  description = "TODO"
+  type        = "list"
+  default     = []
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
