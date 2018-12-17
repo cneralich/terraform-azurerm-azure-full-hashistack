@@ -27,7 +27,7 @@ module "hashistack_lb" {
 #  Azure Network Resources
 # ---------------------------------------------------------------------------------------------------------------------
 resource "azurerm_network_security_group" "hashistack" {
-  name                = "${var.name}"
+  name                = "${var.resource_group_name}"
   location            = "${var.azure_region}"
   resource_group_name = "${var.azure_resource_group_name}"
 
@@ -111,12 +111,12 @@ data "template_file" "hashistack_init" {
   template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
 
   vars = {
-    name      = "${var.name}"
+    name      = "${var.resource_group_name}"
     user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
   }
 }
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
-  name                = "${var.name}"
+  name                = "${var.resource_group_name}"
   location            = "${var.azure_region}"
   resource_group_name = "${var.azure_resource_group_name}"
 
@@ -150,7 +150,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
   }
 
   os_profile {
-    computer_name_prefix = "${var.name}"
+    computer_name_prefix = "${var.resource_group_name}"
     admin_username       = "${var.admin_username}"
     admin_password       = "${var.admin_password}"
 
@@ -168,12 +168,12 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
   }
 
   network_profile {
-    name                                   = "${var.name}"
+    name                                   = "${var.resource_group_name}"
     primary                                = true
     network_security_group_id              = "${azurerm_network_security_group.hashistack.id}"
 
     ip_configuration {
-      name = "${var.name}"
+      name = "${var.resource_group_name}"
       primary = "True"
       subnet_id                              = "${var.azure_subnet_id}"
 

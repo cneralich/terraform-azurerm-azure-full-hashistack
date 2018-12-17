@@ -38,10 +38,6 @@ variable "admin_public_key_openssh" {
 # ---------------------------------------------------------------------------------------------------------------------
 # Azure Variables
 # ---------------------------------------------------------------------------------------------------------------------
-variable "name" {
-  description = "The name to use on all of the resources."
-  type        = "string"
-}
 
 variable "azure_resource_group_name" {
   description = "The name to use on all of the resources."

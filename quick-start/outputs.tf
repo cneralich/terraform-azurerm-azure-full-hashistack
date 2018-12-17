@@ -1,7 +1,7 @@
 output "zREADME" {
   value = <<README
 # ------------------------------------------------------------------------------
-# ${var.name} HashiStack Consul - Azure
+# ${var.resource_group_name} HashiStack Consul - Azure
 # ------------------------------------------------------------------------------
 You can now interact with Consul using any of the CLI or API commands.
   - https://www.consul.io/docs/commands/index.html
@@ -36,7 +36,7 @@ the below env var has been set for you.
 }
 
 # ------------------------------------------------------------------------------
-# ${var.name} HashiStack Vault - Azure
+# ${var.resource_group_name} HashiStack Vault - Azure
 # ------------------------------------------------------------------------------
 To start interacting with Vault from the Jump host follow the below steps to 
 set this up.
@@ -45,7 +45,7 @@ set this up.
 below command to accomplish this automatically (we'll use Consul DNS moving
 forward once Vault is unsealed).
   $ ssh -A ${var.admin_username}@$(curl http://127.0.0.1:8500/v1/agent/members | jq -M -r \
-      '[.[] | select(.Name | contains ("${var.name}-hashistack")) | .Addr][0]')
+      '[.[] | select(.Name | contains ("${var.resource_group_name}-hashistack")) | .Addr][0]')
 
 2.) Initialize Vault
   $ vault operator init
@@ -95,7 +95,7 @@ the below env var has been set for you.
 }
 
 # ------------------------------------------------------------------------------
-# ${var.name} HashiStack Nomad - Azure
+# ${var.resource_group_name} HashiStack Nomad - Azure
 # ------------------------------------------------------------------------------
 You can interact with Nomad using any of the CLI
 (https://www.nomadproject.io/docs/commands/index.html) or API
