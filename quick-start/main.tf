@@ -1,11 +1,4 @@
 # ---------------------------------------------------------------------------------------------------------------------
-#  SSH Resources
-# ---------------------------------------------------------------------------------------------------------------------
-module "ssh_key" {
-  source = "github.com/hashicorp-modules/ssh-keypair-data.git"
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
 # ---------------------------------------------------------------------------------------------------------------------
 module "hashistack_lb" {
@@ -172,7 +165,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
 
     ssh_keys {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${var.admin_public_key_openssh != "" ? var.admin_public_key_openssh : module.ssh_key.public_key_openssh}"
+      key_data = "${var.admin_public_key_openssh}"
     }
   }
 

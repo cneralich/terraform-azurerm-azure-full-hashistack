@@ -38,7 +38,6 @@ variable "admin_password" {
 variable "admin_public_key_openssh" {
   description = "The SSH public key data to use for each VM."
   type        = "string"
-  default     = ""
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
