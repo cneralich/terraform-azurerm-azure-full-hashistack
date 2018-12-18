@@ -38,7 +38,7 @@ variable "admin_password" {
 variable "admin_public_key_openssh" {
   description = "The SSH public key data to use for each VM."
   type        = "string"
-  default = ""
+  default     = ""
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -79,6 +79,7 @@ variable "azure_vnet_cidr_block" {
   type        = "string"
   default     = "172.31.0.0/20"
 }
+
 variable "azure_subnet_id" {
   description = "Subnet ID to provision resources in."
   type        = "string"
@@ -86,14 +87,14 @@ variable "azure_subnet_id" {
 
 variable "azure_load_balancer_backend_address_pool_ids" {
   description = "TODO"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 variable "azure_load_balancer_inbound_nat_rules_ids" {
   description = "TODO"
-  type = "list"
-  default = []
+  type        = "list"
+  default     = []
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

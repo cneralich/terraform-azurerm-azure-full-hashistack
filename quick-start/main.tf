@@ -122,6 +122,7 @@ data "template_file" "hashistack_init" {
     user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
   }
 }
+
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
   name                = "${var.name}"
   location            = "${var.azure_region}"
@@ -134,6 +135,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     tier     = "Standard"
     capacity = 2
   }
+
   // TODO
   storage_profile_image_reference {
     publisher = "Canonical"
@@ -175,22 +177,20 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
   }
 
   network_profile {
-    name                                   = "${var.name}"
-    primary                                = true
-    network_security_group_id              = "${azurerm_network_security_group.hashistack.id}"
+    name                      = "${var.name}"
+    primary                   = true
+    network_security_group_id = "${azurerm_network_security_group.hashistack.id}"
 
     ip_configuration {
-      name = "${var.name}"
-      primary = "True"
-      subnet_id                              = "${var.azure_subnet_id}"
+      name      = "${var.name}"
+      primary   = "True"
+      subnet_id = "${var.azure_subnet_id}"
 
       load_balancer_backend_address_pool_ids = [
-        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}"
+        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}",
       ]
 
-      load_balancer_inbound_nat_rules_ids    = [
-
-      ]
+      load_balancer_inbound_nat_rules_ids = []
     }
   }
 
