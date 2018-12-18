@@ -64,7 +64,7 @@ resource "azurerm_network_security_group" "hashistack" {
 
   security_rule {
     name                       = "tcp_4646"
-    priority                   = 101
+    priority                   = 102
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -76,7 +76,7 @@ resource "azurerm_network_security_group" "hashistack" {
 
   security_rule {
     name                       = "tcp_8080"
-    priority                   = 101
+    priority                   = 103
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -88,7 +88,7 @@ resource "azurerm_network_security_group" "hashistack" {
 
   security_rule {
     name                       = "tcp_8200"
-    priority                   = 101
+    priority                   = 104
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
@@ -100,7 +100,7 @@ resource "azurerm_network_security_group" "hashistack" {
 
   security_rule {
     name                       = "tcp_8500"
-    priority                   = 101
+    priority                   = 105
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
