@@ -1,9 +1,16 @@
 # ---------------------------------------------------------------------------------------------------------------------
+#  SSH Resources
+# ---------------------------------------------------------------------------------------------------------------------
+module "ssh_key" {
+  source = "github.com/hashicorp-modules/ssh-keypair-data.git"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
 # ---------------------------------------------------------------------------------------------------------------------
 module "hashistack_lb" {
   source              = "Azure/loadbalancer/azurerm"
-  resource_group_name = "${var.azure_resource_group_name}"
+  resource_group_name = "${var.name}"
   location            = "${var.azure_region}"
   prefix              = "hashistack"
   frontend_name       = "hashistack"
@@ -27,9 +34,9 @@ module "hashistack_lb" {
 #  Azure Network Resources
 # ---------------------------------------------------------------------------------------------------------------------
 resource "azurerm_network_security_group" "hashistack" {
-  name                = "${var.resource_group_name}"
+  name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${var.azure_resource_group_name}"
+  resource_group_name = "${var.name}"
 
   security_rule {
     name                       = "http"
@@ -111,14 +118,14 @@ data "template_file" "hashistack_init" {
   template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
 
   vars = {
-    name      = "${var.resource_group_name}"
+    name      = "${var.name}"
     user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
   }
 }
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
-  name                = "${var.resource_group_name}"
+  name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${var.azure_resource_group_name}"
+  resource_group_name = "${var.name}"
 
   upgrade_policy_mode = "Manual"
 
@@ -150,7 +157,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
   }
 
   os_profile {
-    computer_name_prefix = "${var.resource_group_name}"
+    computer_name_prefix = "${var.name}"
     admin_username       = "${var.admin_username}"
     admin_password       = "${var.admin_password}"
 
@@ -163,17 +170,17 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
 
     ssh_keys {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${var.admin_public_key_openssh}"
+      key_data = "${var.admin_public_key_openssh != "" ? var.admin_public_key_openssh : module.ssh_key.public_key_openssh}"
     }
   }
 
   network_profile {
-    name                                   = "${var.resource_group_name}"
+    name                                   = "${var.name}"
     primary                                = true
     network_security_group_id              = "${azurerm_network_security_group.hashistack.id}"
 
     ip_configuration {
-      name = "${var.resource_group_name}"
+      name = "${var.name}"
       primary = "True"
       subnet_id                              = "${var.azure_subnet_id}"
 

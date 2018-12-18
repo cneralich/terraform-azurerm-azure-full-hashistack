@@ -1,6 +1,11 @@
 # ---------------------------------------------------------------------------------------------------------------------
 # General Variables
 # ---------------------------------------------------------------------------------------------------------------------
+variable "name" {
+  description = "The name to use on all of the resources (in this case, the Azure Resource Group name as well)."
+  type        = "string"
+}
+
 variable "provider" {
   description = "Provider name to be used in the templated scripts run as part of cloud-init"
   type        = "string"
@@ -33,16 +38,13 @@ variable "admin_password" {
 variable "admin_public_key_openssh" {
   description = "The SSH public key data to use for each VM."
   type        = "string"
+  default = ""
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Azure Variables
 # ---------------------------------------------------------------------------------------------------------------------
 
-variable "azure_resource_group_name" {
-  description = "The name to use on all of the resources."
-  type        = "string"
-}
 variable "azure_region" {
   description = "The Azure Region to use for all resources (ex: westus, eastus)."
   type        = "string"
