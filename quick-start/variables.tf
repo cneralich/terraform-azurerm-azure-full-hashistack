@@ -47,7 +47,7 @@ variable "admin_public_key_openssh" {
 variable "azure_region" {
   description = "The Azure Region to use for all resources (ex: westus, eastus)."
   type        = "string"
-  default     = "westus"
+  default     = "eastus"
 }
 
 variable "azure_os" {

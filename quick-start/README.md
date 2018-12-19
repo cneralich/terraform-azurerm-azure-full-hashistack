@@ -55,7 +55,7 @@ These are required modules used to populate required input variables for the aut
 - `local_ip_url`: The URL to use to get a resource's IP address at runtime.
 - `admin_username`: The username to use for each VM.
 - `admin_password`: The password to use for each VM.
-- `azure_region`: The Azure Region to use for all resources (ex: westus, eastus).
+- `azure_region`: The Azure Region to use for all resources (ex: West US, East US).
 - `azure_os`: The operating system to use on each VM.
 - `azure_vm_size`: The size to use for each VM.
 - `azure_vnet_cidr_block`: The public network CIDRs to add to the virtual network.
