@@ -7,10 +7,12 @@ You can now interact with Consul using any of the CLI or API commands.
   - https://www.consul.io/docs/commands/index.html
   - https://www.consul.io/api/index.html
 
-${"Consul UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8500"}
+Consul UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8500
 
-(Public) The Consul nodes are in a public subnet with UI & n SSH access open
-from the internet. WARNING - DO NOT DO THIS IN PRODUCTION!
+########################################################################################
+# WARNING - DO NOT DO THIS IN PRODUCTION!
+# The Nomad nodes are in a public subnet with UI & SSH access open from the internet. 
+########################################################################################
 
 Use the CLI to retrieve the Consul members, write a key/value, and read
 that key/value.
@@ -68,7 +70,14 @@ host Vault CLI.
 You can now interact with Vault using any of the
 CLI (https://www.vaultproject.io/docs/commands/index.html) or
 API (https://www.vaultproject.io/api/index.html) commands.
-${__builtin_StringToFloat(replace(replace(var.hashistack_vault_version, "-ent", ""), ".", "")) >= 0100 || replace(var.hashistack_vault_version, "-ent", "") != var.hashistack_vault_version ? format("\nVault UI: %s%s %s\n\n%s", "http://", module.hashistack_lb.azurerm_public_ip_address[0], "(Public) The Vault nodes are in a public subnet with UI & SSH access open from the internet. WARNING - DO NOT DO THIS IN PRODUCTION!\n") : ""}
+
+Vault UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8200
+
+########################################################################################
+# WARNING - DO NOT DO THIS IN PRODUCTION!
+# The Nomad nodes are in a public subnet with UI & SSH access open from the internet. 
+########################################################################################
+
 
 To start interacting with Vault, set your Vault token to authenticate requests.
 We will use the "Initial Root Token" that was output from the 
@@ -100,7 +109,14 @@ the below env var has been set for you.
 You can interact with Nomad using any of the CLI
 (https://www.nomadproject.io/docs/commands/index.html) or API
 (https://www.nomadproject.io/api/index.html) commands.
-${format("Nomad UI: %s%s %s\n\n%s", "http://", module.hashistack_lb.azurerm_public_ip_address[0], "(Public) The Nomad nodes are in a public subnet with UI & SSH access open from the\ninternet. WARNING - DO NOT DO THIS IN PRODUCTION!")}
+
+Nomad UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:4646 (Public) 
+
+########################################################################################
+# WARNING - DO NOT DO THIS IN PRODUCTION!
+# The Nomad nodes are in a public subnet with UI & SSH access open from the internet. 
+########################################################################################
+
 Use the CLI to retrieve Nomad servers & clients, then deploy a Redis Docker
 container and check it's status.
   $ nomad server members # Check Nomad's server members

@@ -67,6 +67,12 @@ variable "azure_vm_size" {
   default     = "Standard_DS1_V2"
 }
 
+variable "azure_asg_initial_vm_count" {
+  description = "The number of VMs to spin up in the autoscaling group initially."
+  type        = "string"
+  default     = "1"
+}
+
 variable "azure_vm_custom_data" {
   description = "Custom data script to pass and execute on each VM at bootup."
   type        = "string"
