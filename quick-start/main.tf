@@ -1,26 +1,33 @@
 # ---------------------------------------------------------------------------------------------------------------------
+#  Helpful Testing Resources
+# ---------------------------------------------------------------------------------------------------------------------
+resource "azurerm_resource_group" "hashistack" {
+  name     = "${var.name}"
+  location = "${var.azure_region}"
+}
+module "ssh_key" {
+  source               = "github.com/hashicorp-modules/ssh-keypair-data.git"
+  private_key_filename = "id_rsa_${var.name}"
+}
+module "network_azure" {
+  source               = "git@github.com:hashicorp-modules/network-azure.git"
+  name                 = "${azurerm_resource_group.hashistack.name}"
+  environment_name     = "${var.name}"
+  location             = "${var.azure_region}"
+  os                   = "${var.azure_os}"
+  public_key_data      = "${module.ssh_key.public_key_openssh}"
+  jumphost_vm_size     = "${var.azure_vm_size}"
+  network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
 # ---------------------------------------------------------------------------------------------------------------------
-module "hashistack_lb" {
-  source              = "Azure/loadbalancer/azurerm"
-  resource_group_name = "${var.name}"
-  location            = "${var.azure_region}"
-  prefix              = "hashistack"
-  frontend_name       = "hashistack"
-
-  "remote_port" {
-    ssh = ["Tcp", "22"]
-  }
-
-  "lb_port" {
-    http     = ["80", "Tcp", "80"]
-    https    = ["443", "Tcp", "443"]
-    tcp_4646 = ["4646", "Tcp", "4646"]
-    tcp_8080 = ["8080", "Tcp", "8080"]
-    tcp_8200 = ["8200", "Tcp", "8200"]
-    tcp_8500 = ["8500", "Tcp", "8500"]
-    tcp_8501 = ["8501", "Tcp", "8501"]
-  }
+module "hashistack_lb_azure" {
+  source               = "./modules/hashistack-lb-azure"
+  name                 = "${var.name}"
+  azure_region         = "${var.azure_region}"
+  azure_nat_pool_count = "${var.azure_asg_initial_vm_count}"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -102,6 +109,18 @@ resource "azurerm_network_security_group" "hashistack" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "ssh"
+    priority                   = 106
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -164,8 +183,10 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     disable_password_authentication = true
 
     ssh_keys {
-      path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${var.admin_public_key_openssh}"
+      path = "/home/${var.admin_username}/.ssh/authorized_keys"
+
+      // key_data = "${var.admin_public_key_openssh}"
+      key_data = "${module.ssh_key.public_key_openssh}"
     }
   }
 
@@ -177,13 +198,16 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     ip_configuration {
       name      = "${var.name}"
       primary   = "True"
-      subnet_id = "${var.azure_subnet_id}"
+      // subnet_id = "${var.azure_subnet_id}"
+      subnet_id = "${module.network_azure.subnet_public_ids[0]}"
 
       load_balancer_backend_address_pool_ids = [
-        "${module.hashistack_lb.azurerm_lb_backend_address_pool_id}",
+        "${module.hashistack_lb_azure.backend_address_pool_id}",
       ]
 
-      load_balancer_inbound_nat_rules_ids = []
+      load_balancer_inbound_nat_rules_ids = [
+        "${module.hashistack_lb_azure.inbound_nat_rules_ids}",
+      ]
     }
   }
 

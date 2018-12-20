@@ -7,7 +7,7 @@ You can now interact with Consul using any of the CLI or API commands.
   - https://www.consul.io/docs/commands/index.html
   - https://www.consul.io/api/index.html
 
-Consul UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8500
+Consul UI: http://${module.hashistack_lb_azure.public_fqdn}:8500
 
 ########################################################################################
 # WARNING - DO NOT DO THIS IN PRODUCTION!
@@ -71,7 +71,7 @@ You can now interact with Vault using any of the
 CLI (https://www.vaultproject.io/docs/commands/index.html) or
 API (https://www.vaultproject.io/api/index.html) commands.
 
-Vault UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:8200
+Vault UI: http://${module.hashistack_lb_azure.public_fqdn}:8200
 
 ########################################################################################
 # WARNING - DO NOT DO THIS IN PRODUCTION!
@@ -110,7 +110,7 @@ You can interact with Nomad using any of the CLI
 (https://www.nomadproject.io/docs/commands/index.html) or API
 (https://www.nomadproject.io/api/index.html) commands.
 
-Nomad UI: http://${module.hashistack_lb.azurerm_public_ip_address[0]}:4646 (Public) 
+Nomad UI: http://${module.hashistack_lb_azure.public_fqdn}:4646 (Public) 
 
 ########################################################################################
 # WARNING - DO NOT DO THIS IN PRODUCTION!
@@ -155,4 +155,16 @@ the below env var has been set for you.
       $${NOMAD_ADDR}/v1/jobs | jq '.' # Check that the job is stopped
 }
 README
+}
+
+output "lb_fqdn" {
+  value = "${module.hashistack_lb_azure.public_fqdn}"
+}
+
+output "lb_public_ip_address" {
+  value = "${module.hashistack_lb_azure.public_ip_address}"
+}
+
+output "quick_ssh_string" {
+  value = "ssh -i id_rsa_${var.name} ${var.user}@${module.hashistack_lb_azure.public_fqdn} -p 50001"
 }
