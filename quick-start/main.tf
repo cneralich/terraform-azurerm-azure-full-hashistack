@@ -2,10 +2,6 @@
 # ---------------------------------------------------------------------------------------------------------------------
 #  Helpful Testing Resources
 # ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_resource_group" "hashistack" {
-  name     = "${var.name}"
-  location = "${var.azure_region}"
-}
 module "ssh_key" {
   source               = "github.com/hashicorp-modules/ssh-keypair-data.git"
   private_key_filename = "id_rsa_${var.name}"
@@ -22,6 +18,14 @@ module "network_azure" {
   network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
 }
 */
+
+# ---------------------------------------------------------------------------------------------------------------------
+#  Azure General Resources
+# ---------------------------------------------------------------------------------------------------------------------
+resource "azurerm_resource_group" "hashistack" {
+  name     = "${var.name}"
+  location = "${var.azure_region}"
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
@@ -52,7 +56,7 @@ data "template_file" "hashistack_init" {
 resource "azurerm_network_security_group" "hashistack" {
   name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${azurerm_resource_group.hashistack.name}"
+  resource_group_name = "${element(concat(azurerm_resource_group.hashistack.*.name, list("")), 0)}"
 
   security_rule {
     name                       = "http"
@@ -142,7 +146,7 @@ resource "azurerm_network_security_group" "hashistack" {
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
   name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${azurerm_resource_group.hashistack.name}"
+  resource_group_name = "${element(concat(azurerm_resource_group.hashistack.*.name, list("")), 0)}"
 
   upgrade_policy_mode = "Manual"
 
