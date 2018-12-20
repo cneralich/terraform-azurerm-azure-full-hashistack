@@ -59,6 +59,8 @@ These are required modules used to populate required input variables for the aut
 - `azure_os`: The operating system to use on each VM.
 - `azure_vm_size`: The size to use for each VM.
 - `azure_vnet_cidr_block`: The public network CIDRs to add to the virtual network.
+- `azure_vm_custom_data`: Custom data script to pass and execute on each VM at bootup.
+- `azure_asg_initial_vm_count`: The number of VMs to spin up in the autoscaling group initially.
 - `hashistack_consul_version`: The version number of Consul to install on the VM at runtime.
 - `hashistack_vault_version`: The version number of Vault to install on the VM at runtime.
 - `hashistack_nomad_version`: The version number of Nomad to install on the VM at runtime.
