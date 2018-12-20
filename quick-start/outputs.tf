@@ -166,5 +166,5 @@ output "lb_public_ip_address" {
 }
 
 output "quick_ssh_string" {
-  value = "ssh -i id_rsa_${var.name} ${var.user}@${module.hashistack_lb_azure.public_fqdn} -p 50001"
+  value = "ssh -i id_rsa_${var.name} ${var.admin_username}@${module.hashistack_lb_azure.public_fqdn} -p 50001"
 }

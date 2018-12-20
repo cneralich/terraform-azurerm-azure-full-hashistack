@@ -1,3 +1,4 @@
+/*
 # ---------------------------------------------------------------------------------------------------------------------
 #  Helpful Testing Resources
 # ---------------------------------------------------------------------------------------------------------------------
@@ -9,6 +10,7 @@ module "ssh_key" {
   source               = "github.com/hashicorp-modules/ssh-keypair-data.git"
   private_key_filename = "id_rsa_${var.name}"
 }
+
 module "network_azure" {
   source               = "git@github.com:hashicorp-modules/network-azure.git"
   name                 = "${azurerm_resource_group.hashistack.name}"
@@ -19,15 +21,29 @@ module "network_azure" {
   jumphost_vm_size     = "${var.azure_vm_size}"
   network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
 }
+*/
 
 # ---------------------------------------------------------------------------------------------------------------------
 #  Azure Load Balancer Resources
 # ---------------------------------------------------------------------------------------------------------------------
 module "hashistack_lb_azure" {
-  source               = "./modules/hashistack-lb-azure"
+  source               = "git@github.com:hashicorp-modules/hashistack-lb-azure.git"
   name                 = "${var.name}"
   azure_region         = "${var.azure_region}"
   azure_nat_pool_count = "${var.azure_asg_initial_vm_count}"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+#  Azure Auto Scaler Resources
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "template_file" "hashistack_init" {
+  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
+
+  vars = {
+    name      = "${var.name}"
+    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
+  }
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -36,7 +52,7 @@ module "hashistack_lb_azure" {
 resource "azurerm_network_security_group" "hashistack" {
   name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${var.name}"
+  resource_group_name = "${azurerm_resource_group.hashistack.name}"
 
   security_rule {
     name                       = "http"
@@ -123,22 +139,10 @@ resource "azurerm_network_security_group" "hashistack" {
   }
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#  Azure Auto Scaler Resources
-# ---------------------------------------------------------------------------------------------------------------------
-data "template_file" "hashistack_init" {
-  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
-
-  vars = {
-    name      = "${var.name}"
-    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
-  }
-}
-
 resource "azurerm_virtual_machine_scale_set" "hashistack" {
   name                = "${var.name}"
   location            = "${var.azure_region}"
-  resource_group_name = "${var.name}"
+  resource_group_name = "${azurerm_resource_group.hashistack.name}"
 
   upgrade_policy_mode = "Manual"
 
@@ -185,8 +189,8 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     ssh_keys {
       path = "/home/${var.admin_username}/.ssh/authorized_keys"
 
-      // key_data = "${var.admin_public_key_openssh}"
-      key_data = "${module.ssh_key.public_key_openssh}"
+      key_data = "${var.admin_public_key_openssh}"
+      // key_data = "${module.ssh_key.public_key_openssh}"
     }
   }
 
@@ -198,8 +202,8 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     ip_configuration {
       name      = "${var.name}"
       primary   = "True"
-      // subnet_id = "${var.azure_subnet_id}"
-      subnet_id = "${module.network_azure.subnet_public_ids[0]}"
+      subnet_id = "${var.azure_subnet_id}"
+      // subnet_id = "${module.network_azure.subnet_public_ids[0]}"
 
       load_balancer_backend_address_pool_ids = [
         "${module.hashistack_lb_azure.backend_address_pool_id}",
