@@ -71,7 +71,7 @@ variable "azure_vm_size" {
 variable "azure_asg_initial_vm_count" {
   description = "The number of VMs to spin up in the autoscaling group initially."
   type        = "string"
-  default     = "1"
+  default     = "3"
 }
 
 variable "azure_vm_custom_data" {
