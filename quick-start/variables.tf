@@ -14,6 +14,7 @@ variable "provider" {
 
 variable "environment" {
   description = "Name of the environment for resource tagging (ex: dev, prod, etc)."
+  type        = "string"
   default     = "demo"
 }
 

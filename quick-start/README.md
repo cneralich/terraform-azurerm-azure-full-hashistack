@@ -1,6 +1,6 @@
 # Azure HashiStack Terraform Module
 
-### Provisions resources for a HashiStack auto-scaling group in Azure. 
+_Provisions resources for a HashiStack auto-scaling group in Azure._
 
 ## Deployment Prerequisites
 
@@ -33,9 +33,9 @@
 
 ## Modules
 
-### Required
+### Helpful
 
-These are required modules used to populate required input variables for the auto scaling group. The sub-bullets show the mapping of output variable --> required input variable for the respective modules.
+These modules can be used to populate required input variables for the auto scaling group, which is helpful for testing. They are commented out in the `main.tf` file for ease of access.
 
 - [Keypair Terraform Module](https://github.com/hashicorp-modules/ssh-keypair-data)
   - `public_key_openssh` --> `public_key_openssh`
@@ -47,6 +47,7 @@ These are required modules used to populate required input variables for the aut
 ### Required
 
 - `name`: The name to use on all of the resources.
+- `admin_public_key_openssh`: The SSH public key data to use for each VM.
 
 ### Optional
 
