@@ -33,7 +33,6 @@ variable "admin_username" {
 variable "admin_password" {
   description = "The password to use for each VM."
   type        = "string"
-  default     = "pTFE1234!"
 }
 
 variable "admin_public_key_openssh" {
@@ -101,57 +100,4 @@ variable "azure_load_balancer_inbound_nat_rules_ids" {
   description = "TODO"
   type        = "list"
   default     = []
-}
-
-# ---------------------------------------------------------------------------------------------------------------------
-# HashiStack Variables
-# ---------------------------------------------------------------------------------------------------------------------
-variable "hashistack_consul_version" {
-  description = "The version number of Consul to install on the VM at runtime."
-  default     = "1.2.3"
-}
-
-variable "hashistack_vault_version" {
-  description = "The version number of Vault to install on the VM at runtime."
-  default     = "0.11.3"
-}
-
-variable "hashistack_nomad_version" {
-  description = "The version number of Nomad to install on the VM at runtime."
-  default     = "0.8.6"
-}
-
-variable "hashistack_consul_url" {
-  description = "URL to download Consul version if internet not accessible."
-  default     = ""
-}
-
-variable "hashistack_vault_url" {
-  description = "URL to download Vault version if internet not accessible."
-  default     = ""
-}
-
-variable "hashistack_nomad_url" {
-  description = "URL to download Nomad version if internet not accessible."
-  default     = ""
-}
-
-variable "consul_server_config_override" {
-  description = "Any additional Consul server coonfiguration to override defaults."
-  default     = ""
-}
-
-variable "consul_client_config_override" {
-  description = "Any additional Consul client coonfiguration to override defaults."
-  default     = ""
-}
-
-variable "vault_config_override" {
-  description = "Any additional Vault coonfiguration to override defaults."
-  default     = ""
-}
-
-variable "nomad_config_override" {
-  description = "Any additional Nomad coonfiguration to override defaults."
-  default     = ""
 }

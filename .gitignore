@@ -6,6 +6,9 @@
 # Directories
 .terraform/
 
+# Terraform Variables
+*.tfvars
+
 # SSH Keys
 *.pem
 id_rsa*

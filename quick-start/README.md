@@ -48,6 +48,7 @@ These modules can be used to populate required input variables for the auto scal
 
 - `name`: The name to use on all of the resources.
 - `admin_public_key_openssh`: The SSH public key data to use for each VM.
+- `admin_password`: The password to use for each VM.
 
 ### Optional
 
@@ -55,23 +56,12 @@ These modules can be used to populate required input variables for the auto scal
 - `provider`: Provider name to be used in the templated scripts run as part of cloud-init
 - `local_ip_url`: The URL to use to get a resource's IP address at runtime.
 - `admin_username`: The username to use for each VM.
-- `admin_password`: The password to use for each VM.
 - `azure_region`: The Azure Region to use for all resources (ex: West US, East US).
 - `azure_os`: The operating system to use on each VM.
 - `azure_vm_size`: The size to use for each VM.
 - `azure_vnet_cidr_block`: The public network CIDRs to add to the virtual network.
 - `azure_vm_custom_data`: Custom data script to pass and execute on each VM at bootup.
 - `azure_asg_initial_vm_count`: The number of VMs to spin up in the autoscaling group initially.
-- `hashistack_consul_version`: The version number of Consul to install on the VM at runtime.
-- `hashistack_vault_version`: The version number of Vault to install on the VM at runtime.
-- `hashistack_nomad_version`: The version number of Nomad to install on the VM at runtime.
-- `hashistack_consul_url`: URL to download Consul version if internet not accessible.
-- `hashistack_vault_url`: URL to download Vault version if internet not accessible.
-- `hashistack_nomad_url`: URL to download Nomad version if internet not accessible.
-- `consul_server_config_override`: Any additional Consul server coonfiguration to override defaults.
-- `consul_client_config_override`: Any additional Consul client coonfiguration to override defaults.
-- `vault_config_override`: Any additional Vault coonfiguration to override defaults.
-- `nomad_config_override`: Any additional Nomad coonfiguration to override defaults.
 
 ## Outputs
 
