@@ -208,5 +208,6 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
 
   tags {
     environment = "${var.environment}"
+    consul_cluster_name = "${var.name}"
   }
 }
