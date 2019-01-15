@@ -10,7 +10,7 @@ module "network_azure" {
   os                   = "${var.azure_os}"
   public_key_data      = "${var.admin_public_key_openssh}"
   jumphost_vm_size     = "${var.azure_vm_size}"
-  network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
+  network_cidrs_public = []
 }
 */
 
