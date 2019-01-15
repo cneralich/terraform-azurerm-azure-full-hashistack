@@ -2,22 +2,26 @@
 # ---------------------------------------------------------------------------------------------------------------------
 #  Helpful Testing Resources
 # ---------------------------------------------------------------------------------------------------------------------
-module "ssh_key" {
-  source               = "github.com/hashicorp-modules/ssh-keypair-data.git"
-  private_key_filename = "id_rsa_${var.name}"
-}
-
 module "network_azure" {
   source               = "git@github.com:hashicorp-modules/network-azure.git"
   name                 = "${azurerm_resource_group.hashistack.name}"
   environment_name     = "${var.name}"
   location             = "${var.azure_region}"
   os                   = "${var.azure_os}"
-  public_key_data      = "${module.ssh_key.public_key_openssh}"
+  public_key_data      = "${var.admin_public_key_openssh}"
   jumphost_vm_size     = "${var.azure_vm_size}"
   network_cidrs_public = ["${var.azure_vnet_cidr_block}"]
 }
 */
+
+data "template_file" "hashistack_init" {
+  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
+
+  vars = {
+    name      = "${var.name}"
+    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
+  }
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 #  Azure General Resources
@@ -37,18 +41,6 @@ module "hashistack_lb_azure" {
   azure_nat_pool_count = "${var.azure_asg_initial_vm_count}"
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#  Azure Auto Scaler Resources
-# ---------------------------------------------------------------------------------------------------------------------
-
-data "template_file" "hashistack_init" {
-  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
-
-  vars = {
-    name      = "${var.name}"
-    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
-  }
-}
 
 # ---------------------------------------------------------------------------------------------------------------------
 #  Azure Network Resources
@@ -194,7 +186,6 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
       path = "/home/${var.admin_username}/.ssh/authorized_keys"
 
       key_data = "${var.admin_public_key_openssh}"
-      // key_data = "${module.ssh_key.public_key_openssh}"
     }
   }
 
