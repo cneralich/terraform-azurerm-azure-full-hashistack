@@ -200,13 +200,9 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
       subnet_id = "${var.azure_subnet_id}"
       // subnet_id = "${module.network_azure.subnet_public_ids[0]}"
 
-      load_balancer_backend_address_pool_ids = [
-        "${module.hashistack_lb_azure.backend_address_pool_id}",
-      ]
+      load_balancer_backend_address_pool_ids = ["${module.hashistack_lb_azure.backend_address_pool_id}"]
 
-      load_balancer_inbound_nat_rules_ids = [
-        "${module.hashistack_lb_azure.inbound_nat_rules_ids}",
-      ]
+      load_balancer_inbound_nat_rules_ids = "${module.hashistack_lb_azure.inbound_nat_rules_ids}"
     }
   }
 
