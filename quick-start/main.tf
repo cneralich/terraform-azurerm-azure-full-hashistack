@@ -202,7 +202,7 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
 
       load_balancer_backend_address_pool_ids = ["${module.hashistack_lb_azure.backend_address_pool_id}"]
 
-      load_balancer_inbound_nat_rules_ids = "${module.hashistack_lb_azure.inbound_nat_rules_ids}"
+      load_balancer_inbound_nat_rules_ids = ["${module.hashistack_lb_azure.inbound_nat_rules_ids}"]
     }
   }
 
