@@ -1,6 +1,6 @@
 # Azure HashiStack Terraform Module
 
-_Provisions resources for a HashiStack auto-scaling group in Azure. This does not auto-install the HashiStack, that information must be provided as `custom_data`._
+_Provisions resources for a HashiStack auto-scaling group in Azure. This does not auto-install the HashiStack, that information must be provided as `azure_vm_custom_data`. As such, this only works with the quick-start guide for now._
 
 ## Deployment Prerequisites
 
