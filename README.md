@@ -1,60 +1,93 @@
-# HashiStack Azure
+# Azure HashiStack Terraform Module
 
-The goal of this guide is to allows users to easily provision the HashiStack in just a few short commands.
+_Provisions resources for a HashiStack auto-scaling group in Azure. This does not auto-install the HashiStack, that information must be provided as `custom_data`._
 
-## Reference Material
+## Deployment Prerequisites
 
-- [Terraform](https://www.terraform.io/)
-- [Consul](https://www.consul.io/)
-- [Vault](https://www.vaultproject.io/)
-- [Nomad](https://www.nomadproject.io/)
+1. In order to perform the steps in this guide, you will need to have an Azure subscription for which you can create Service Principals as well as network and compute resources. You can create a free Azure account [here](https://azure.microsoft.com/en-us/free/).
 
-## Estimated Time to Complete
+2. Certain steps will require entering commands through the Azure CLI. You can find out more about installing it [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-5 minutes.
+3. Create Azure API Credentials: set up the main Service Principal that will be used for Packer and Terraform:
+    * [https://www.terraform.io/docs/providers/azurerm/index.html]()
+    * The above steps will create a Service Principal with the [Contributor](https://docs.microsoft.com/en-us/azure/active-directory/role-based-access-built-in-roles#contributor) role in your Azure subscription
 
-## Personas
+4. `export` environment variables for the main (Packer/Terraform) Service Principal. For example, create an `env.sh` file with the following values (obtained from step `1` above):
 
-### Operator
+    ```
+    # Exporting variables in both cases just in case, no pun intended
+    export ARM_SUBSCRIPTION_ID="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    export ARM_CLIENT_ID="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    export ARM_CLIENT_SECRET="cccccccc-cccc-cccc-cccc-cccccccccccc"
+    export ARM_TENANT_ID="dddddddd-dddd-dddd-dddd-dddddddddddd"
+    export subscription_id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    export client_id="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    export client_secret="cccccccc-cccc-cccc-cccc-cccccccccccc"
+    ```
 
-The operator is responsible for producing the HashiStack infrastructure and managing day 1 & 2 operations. This includes initial service administration, upgrades, and logging/monitoring, and more.
+5. Finally, create a read-only Azure Service Principal (using the Azure CLI) that will be used to perform the Consul auto-join (make note of these values as you will use them later in this guide):
 
-### Developer
+    ```
+    $ az ad sp create-for-rbac --role="Reader" --scopes="/subscriptions/[YOUR_SUBSCRIPTION_ID]"
+    ```
 
-The developer will be consuming the HashiStack services and developing against it. This may be leveraging Consul for Service Discovery, Vault for Secrets Management, or Nomad for application deployment.
+## Modules
 
-### InfoSec
+### Helpful
 
-Infosec will be creating and managing policies for the HashiStack. This may include both ACLs and Sentinel policies across Terraform, Consul, Vault, and Nomad.
+These modules can be used to populate required input variables for the auto scaling group, which is helpful for testing. They are commented out in the `main.tf` file for ease of access.
 
-## Challenge
+- [Keypair Terraform Module](https://github.com/hashicorp-modules/ssh-keypair-data)
+  - `public_key_openssh` --> `public_key_openssh`
+- [Network Azure Terraform Module](https://github.com/hashicorp-modules/network-azure/)
+  - `subnet_public_ids` --> `subnet_ids`
 
-For educational purposes, standing up a cluster of Consul, Vault, and Nomad agents is desirable. Provisioning each cluster separately can be expensive and time consuming.
+## Variables
 
-## Solution
+### Required
 
-Rather than provisioning Consul, Vault, and Nomad clusters separately, we stand up the "HashiStack". The HashiStack is a cluster of nodes that have Consul, Vault, and Nomad agents running on each server.
+- `name`: The name to use on all of the resources.
+- `admin_public_key_openssh`: The SSH public key data to use for each VM.
+- `admin_password`: The password to use for each VM.
+- `azure_subnet_id`: Subnet ID to provision resources in.
 
-_**Disclaimer**: The HashiStack is not considered best practices. Each product (Consul/Vault/Nomad) should be provisioned and managed separately. The "HashiStack" is merely a convenient way to provision a cluster that has all the HashiCorp tools you need._
+### Optional
 
-### Quick Start
+- `environment`: Name of the environment for resource tagging (ex: dev, prod, etc).
+- `provider`: Provider name to be used in the templated scripts run as part of cloud-init
+- `local_ip_url`: The URL to use to get a resource's IP address at runtime.
+- `admin_username`: The username to use for each VM.
+- `azure_region`: The Azure Region to use for all resources (ex: West US, East US).
+- `azure_os`: The operating system to use on each VM.
+- `azure_vm_size`: The size to use for each VM.
+- `azure_vm_custom_data`: Custom data script to pass and execute on each VM at bootup.
+- `azure_asg_initial_vm_count`: The number of VMs to spin up in the autoscaling group initially.
 
-The [HashiStack Quick Start Guide](./quick-start) provisions an HashiStack auto scaling group cluster with jump host. The Consul & Vault agents are running in server mode, while Nomad is running in both Client & Server mode. This enables the Nomad servers to also accept work as Nomad Clients without requiring a separate cluster.
+## Outputs
 
-The Quick Start guide leverages the scripts in the [Guides Configuration Repo](https://github.com/hashicorp/guides-configuration) to do runtime configuration of the HashiStack. Although using `curl bash` at runtime is _not_ best practices, this makes it quick and easy to standup a HashiStack cluster with no external dependencies like pre-built images. This guide will also forgo setting up TLS/encryption on Consul, Vault, and Nomad for the sake of simplicity.
+- `quick_jumphost_ssh_string`: Copy paste this string to SSH into the jumphost.
+- `consul_ui`: Use this link to access the Consul UI.
+- `vault_ui`: Use this link to access the Vault UI.
+- `nomad_ui`: Use this link to access the Nomad UI.
 
-### Choose your Preferred Guide
+## Viewing Logs
 
-`cd` into one of the below guides from the root of the repository and follow the instructions from there.
+Example of viewing `cloud-init` logs:
 
-- Azure dev [TODO]
-- [Azure quick-start](./quick-start/)
-- Azure best-practices [TODO]
+```
+$ tail -f /var/log/cloud-init-output.log
+```
 
-## Next Steps
+Example of viewing `consul` server logs:
 
-Now that you've provisioned and configured the HashiStack, start walking through the below product guides.
+```
+$ journalctl _SYSTEMD_UNIT=consul.service
+```
 
-- [Consul Guides](https://www.consul.io/docs/guides/index.html)
-- [Vault Guides](https://www.vaultproject.io/guides/index.html)
-- [Nomad Guides](https://www.nomadproject.io/guides/index.html)
+## Authors
+
+HashiCorp Solutions Engineering Team.
+
+## License
+
+Mozilla Public License Version 2.0. See LICENSE for full details.
