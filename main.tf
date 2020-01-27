@@ -1,210 +1,107 @@
-module "network_azure" {
-  source               = "git@github.com:hashicorp-modules/network-azure.git"
-  name                 = "${azurerm_resource_group.hashistack.name}"
-  environment     = "${var.name}"
-  location             = "${var.azure_region}"
-  os                   = "${var.azure_os}"
-  public_key_data      = "${var.admin_public_key_openssh}"
-  bastion_vm_size     = "${var.azure_vm_size}"
-  subnet_cidr =  "${var.subnet_cidr}"
-  vnet_cidr = "${var.azure_vnet_cidr_block}"
-  admin_username = "${var.admin_username}"
+# ---------------------------------------------------------------------------------------------------------------------
+# General Variables
+# ---------------------------------------------------------------------------------------------------------------------
+variable "name" {
+  description = "The name to use on all of the resources (in this case, the Azure Resource Group name as well)."
+  type        = "string"
 }
 
-data "template_file" "hashistack_init" {
-  template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
+variable "provider" {
+  description = "Provider name to be used in the templated scripts run as part of cloud-init"
+  type        = "string"
+  default     = "azure"
+}
 
-  vars = {
-    name      = "${var.name}"
-    user_data = "${var.azure_vm_custom_data != "" ? var.azure_vm_custom_data : "echo 'No custom user_data'"}"
-  }
+variable "environment" {
+  description = "Name of the environment for resource tagging (ex: dev, prod, etc)."
+  type        = "string"
+  default     = "demo"
+}
+
+variable "local_ip_url" {
+  description = "The URL to use to get a resource's IP address at runtime."
+  type        = "string"
+  default     = "http://checkip.amazonaws.com"
+}
+
+variable "admin_username" {
+  description = "The username to use for each VM."
+  type        = "string"
+  default     = "hashistack"
+}
+
+variable "admin_password" {
+  description = "The password to use for each VM."
+  type        = "string"
+}
+
+variable "admin_public_key_openssh" {
+  description = "The SSH public key data to use for each VM."
+  type        = "string"
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
-#  Azure General Resources
+# Azure Variables
 # ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_resource_group" "hashistack" {
-  name     = "${var.name}"
-  location = "${var.azure_region}"
+
+variable "azure_region" {
+  description = "The Azure Region to use for all resources (ex: westus, eastus)."
+  type        = "string"
+  default     = "eastus"
 }
 
-# ---------------------------------------------------------------------------------------------------------------------
-#  Azure Load Balancer Resources
-# ---------------------------------------------------------------------------------------------------------------------
-module "hashistack_lb_azure" {
-  source               = "git@github.com:hashicorp-modules/hashistack-lb-azure.git"
-  name                 = "${var.name}"
-  azure_region         = "${var.azure_region}"
-  azure_nat_pool_count = "${var.azure_asg_initial_vm_count}"
+variable "azure_os" {
+  description = "The operating system to use on each VM."
+  type        = "string"
+
+  #################################################################################
+  # Do not change for now, as only a few Linux versions support cloud-init for now 
+  # https://docs.microsoft.com/en-us/azure/virtual-machines/linux/using-cloud-init
+  #################################################################################
+  default = "ubuntu"
 }
 
-
-# ---------------------------------------------------------------------------------------------------------------------
-#  Azure Network Resources
-# ---------------------------------------------------------------------------------------------------------------------
-resource "azurerm_network_security_group" "hashistack" {
-  name                = "${var.name}"
-  location            = "${var.azure_region}"
-  resource_group_name = "${element(concat(azurerm_resource_group.hashistack.*.name, list("")), 0)}"
-
-  security_rule {
-    name                       = "http"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "80"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "https"
-    priority                   = 101
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "443"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "tcp_4646"
-    priority                   = 102
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "4646"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "tcp_8080"
-    priority                   = 103
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8080"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "tcp_8200"
-    priority                   = 104
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8200"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "tcp_8500"
-    priority                   = 105
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "8500"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "ssh"
-    priority                   = 106
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
-  }
+variable "azure_vm_size" {
+  description = "The size to use for each VM."
+  type        = "string"
+  default     = "Standard_DS1_V2"
 }
 
-resource "azurerm_virtual_machine_scale_set" "hashistack" {
-  name                = "${var.name}"
-  location            = "${var.azure_region}"
-  resource_group_name = "${element(concat(azurerm_resource_group.hashistack.*.name, list("")), 0)}"
+variable "azure_asg_initial_vm_count" {
+  description = "The number of VMs to spin up in the autoscaling group initially."
+  type        = "string"
+  default     = "3"
+}
 
-  upgrade_policy_mode = "Manual"
+variable "azure_vm_custom_data" {
+  description = "Custom data script to pass and execute on each VM at bootup."
+  type        = "string"
+  default     = ""
+}
 
-  sku {
-    name     = "${var.azure_vm_size}"
-    tier     = "Standard"
-    capacity = "${var.azure_asg_initial_vm_count}"
-  }
+variable "azure_vnet_cidr_block" {
+  description = "The public network CIDRs to add to the virtual network."
+  type        = "string"
+  default     = "172.31.0.0/20"
+}
 
-  // TODO
-  storage_profile_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
-    version   = "latest"
-  }
+/*variable "azure_subnet_id" {
+  description = "Subnet ID to provision resources in."
+  type        = "string"
+}*/
 
-  storage_profile_os_disk {
-    name              = ""
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-  }
+variable "azure_load_balancer_backend_address_pool_ids" {
+  description = "TODO"
+  type        = "list"
+  default     = []
+}
 
-  storage_profile_data_disk {
-    lun           = 0
-    caching       = "ReadWrite"
-    create_option = "Empty"
-    disk_size_gb  = 10
-  }
+variable "azure_load_balancer_inbound_nat_rules_ids" {
+  description = "TODO"
+  type        = "list"
+  default     = []
+}
 
-  os_profile {
-    computer_name_prefix = "${var.name}"
-    admin_username       = "${var.admin_username}"
-    admin_password       = "${var.admin_password}"
-
-    # Configure runtime installation with the templated scripts
-    custom_data = "${data.template_file.hashistack_init.rendered}"
-  }
-
-  os_profile_linux_config {
-    disable_password_authentication = true
-
-    ssh_keys {
-      path = "/home/${var.admin_username}/.ssh/authorized_keys"
-
-      key_data = "${var.admin_public_key_openssh}"
-    }
-  }
-
-  network_profile {
-    name                      = "${var.name}"
-    primary                   = true
-    network_security_group_id = "${azurerm_network_security_group.hashistack.id}"
-
-    ip_configuration {
-      name      = "${var.name}"
-      primary   = "True"
-      #subnet_id = "${var.azure_subnet_id}"
-      subnet_id = "${module.network_azure.subnet_id}"
-
-      load_balancer_backend_address_pool_ids = ["${module.hashistack_lb_azure.backend_address_pool_id}"]
-
-      load_balancer_inbound_nat_rules_ids = ["${module.hashistack_lb_azure.inbound_nat_rules_ids}"]
-    }
-  }
-
-  tags {
-    environment = "${var.environment}"
-    consul_cluster_name = "${var.name}"
-  }
+variable "subnet_cidr" {
+  description = "Subnet CIDR to use"
 }
