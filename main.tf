@@ -1,18 +1,15 @@
-/*
-# ---------------------------------------------------------------------------------------------------------------------
-#  Helpful Testing Resources
-# ---------------------------------------------------------------------------------------------------------------------
 module "network_azure" {
   source               = "git@github.com:hashicorp-modules/network-azure.git"
   name                 = "${azurerm_resource_group.hashistack.name}"
-  environment_name     = "${var.name}"
+  environment     = "${var.name}"
   location             = "${var.azure_region}"
   os                   = "${var.azure_os}"
   public_key_data      = "${var.admin_public_key_openssh}"
-  jumphost_vm_size     = "${var.azure_vm_size}"
-  network_cidrs_public = []
+  bastion_vm_size     = "${var.azure_vm_size}"
+  subnet_cidr =  "${var.subnet_cidr}"
+  vnet_cidr = "${var.azure_vnet_cidr_block}"
+  admin_username = "${var.admin_username}"
 }
-*/
 
 data "template_file" "hashistack_init" {
   template = "${file("${path.module}/templates/init-systemd.sh.tpl")}"
@@ -197,8 +194,8 @@ resource "azurerm_virtual_machine_scale_set" "hashistack" {
     ip_configuration {
       name      = "${var.name}"
       primary   = "True"
-      subnet_id = "${var.azure_subnet_id}"
-      // subnet_id = "${module.network_azure.subnet_public_ids[0]}"
+      #subnet_id = "${var.azure_subnet_id}"
+      subnet_id = "${module.network_azure.subnet_id}"
 
       load_balancer_backend_address_pool_ids = ["${module.hashistack_lb_azure.backend_address_pool_id}"]
 
